@@ -1,0 +1,229 @@
+---
+title: "Student Performance"
+author: "Anna Lizarov"
+date: "April 30, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+This product is intended to create an automated intervention in order to improve student performance and their learning experience in a course.The target audience of this product are primarily course instructors. Data from a seven week educational data course was used for the analyses provided below. In particular, data of students' scores on class assignments and tweets from 2014 and 2015 classes were used. 
+
+## Libraries
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(shiny)
+library(igraph)
+library(sendmailR)
+```
+
+
+### Datasets
+```{r}
+s <- read.csv("scores.csv", header=TRUE)
+t <- read.csv("tweets.csv", header=TRUE)
+```
+
+#### Social Network Analysis Based on Students' Tweets
+By conducting a social network analysis, a course instructor can examine the social dynamics in the class, which is certainly shown in students' tweets and replies. These networks are split by classes and visualized to see the general picture. Furthermore, these networks are directed. As in, the instructor sees which student replies to which student and who replies the most or gets the most replies. An indegree centrality is measured to see whose tweets had the most replies. The student whi has the highest indegree centrality is the one whose tweets had the most replies, which suggests that probably his or her tweets were either the most thought-provoking, consisted of questions, or that he or she is the most popular student in class. In a similar manner, a student with the lowest indegree centrality either has uncompelling or long tweets that others are less likely to read. The outdegree centrality indicates the number of replies one made. Thus, a student with the highest outdegree centrality replied to the greatest number of his or her classmates. Likewise, the student with the lowest outdegree centrality does not put enough effort into bonding with other students. Therefore, this helps the instructor see which student participates the least and create events or activities for that learners to bond with others. A student with the highest betweenness centrality value is probably the facilitator in class discussions. In particular, he or she sets the tone of the discussions by either asking questions or announcing events. Likewise, betweenness centrality can be used to see which students cause class disruptions. 
+
+```{r}
+s1 <- s %>% select(id, year)
+t <- full_join(t,s1, by = "id")
+ta <- filter(t, year == 2014)  # 2014 students
+tb <- filter(t, year == 2015)   # 2015 students
+```
+
+### 2014
+```{r}
+EDGEa <- ta %>% count(id,reply)
+names(EDGEa) <- c("From", "To", "Count")
+EDGEa <- na.omit(EDGEa)
+VERTEXa <-distinct(ta, id)
+```
+
+## Visualize the Network
+```{r, echo=FALSE}
+set.seed(123)
+g1 <- graph.data.frame(EDGEa, directed=TRUE, vertices = VERTEXa)
+pdf("Tweet_Replies_in_2014.pdf")
+plot(g1, layout=layout.fruchterman.reingold, vertex.color=VERTEXa$id, edge.width=EDGEa$Count, edge.arrow.size=0.5, main = "Tweet Replies in 2014")
+dev.off()
+```
+
+## Centrality Measures
+```{r}
+# Indegree centrality 
+degree(g1, mode = "in")            
+which.max(degree(g1, mode = "in")) # Identifies the ID of the student
+
+# Outdegree centrality
+degree(g1, mode = "ou")
+which.max(degree(g1, mode = "out")) 
+
+```
+
+```{r}
+#Betweenness centrality
+betweenness(g1)
+which.max(betweenness(g1))
+```
+
+
+### 2015
+```{r}
+EDGEb<- tb %>% count(id,reply)
+names(EDGEb) <- c("From", "To", "Count")
+EDGEb <- na.omit(EDGEb)
+VERTEXb<-distinct(tb, id)
+```
+
+## Visualize the Network
+```{r, echo=FALSE}
+set.seed(123)
+g2 <- graph.data.frame(EDGEb, directed=TRUE, vertices = VERTEXb)
+pdf("Tweet_Replies_in_2015.pdf")
+plot(g2, layout=layout.fruchterman.reingold, vertex.color=VERTEXb$id, edge.width=EDGEb$Count, edge.arrow.size=0.5, main = "Tweet Replies in 2015")
+dev.off()
+```
+
+## Centrality Measures
+```{r}
+# Indegree centrality 
+degree(g2, mode = "in")            
+which.max(degree(g2, mode = "in")) 
+
+# Outdegree centrality
+degree(g2, mode = "ou")
+which.max(degree(g2, mode = "out")) 
+
+```
+
+```{r}
+#Betweenness centrality
+betweenness(g2)
+which.max(betweenness(g2))
+```
+
+#### Score and Time Visualization
+Four data visualizations were created for the instructor to see the overall student performance in the course. The seventh week, during which the final exam was taken, was not included in the data analysis because the final exam is not reflective of the student performance given that many students have other course final exams and final projects. Therefore, many of them do not have as much time to focus and study for that exam. Hence, only unit scores and time took to complete these units were analyzed. 
+
+## Data Wrangling
+```{r}
+s2 <- s %>% select(id, year, unit.choice.1,unit.choice.2, unit.choice.3, unit.choice.4, unit.choice.5, unit.choice.6) %>% group_by(id) %>% gather(Week, Unit, 3:8) 
+s2$Week = ifelse(s2$Week == "unit.choice.1", 1, ifelse(s2$Week == "unit.choice.2",2, ifelse(s2$Week == "unit.choice.3",3, ifelse(s2$Week == "unit.choice.4", 4, ifelse(s2$Week == "unit.choice.5", 5, ifelse(s2$Week == "unit.choice.6", 6, 0))))))
+s3 <- s %>% select(id, score1,score2, score3, score4,score5, score6) %>% group_by(id) %>% gather(ScoreType, Score, 2:7) %>% select(-c(ScoreType))
+s4 <- cbind(s2,s3) %>% select(-id1)
+s5 <- s %>% select(id, minutes.1,minutes.2, minutes.3, minutes.4, minutes.5, minutes.6) %>% group_by(id) %>% gather(MinuteType, Minute, 2:7) %>% select(-c(MinuteType))
+s6 <- cbind(s2,s5) %>% select(-id1)
+s7 <- cbind(s4,s6) %>% select(-c(id1, Unit1, Week1, year1))
+s7$P_F = ifelse(s7$Score > 0.65, "Pass", "Fail")
+s7 <- s7 %>% group_by(id,year) %>% mutate(Avg_Score= mean(Score)) 
+s7$Class_P_F = ifelse(s7$Avg_Score > 0.65, "Pass", "Fail")
+s7$year = as.factor(s7$year)
+s8 <- s7 %>% group_by(Unit) %>% mutate(avg_score = mean(Score)) %>% mutate(avg_time = mean(Minute)) 
+s8 <- s8 %>% select(Unit, avg_score, avg_time)
+s8 <- unique(s8)
+s9 <- s7 %>% group_by(Week) %>% mutate(avg_score = mean(Score)) %>% mutate(avg_time = mean(Minute)) 
+s9 <- s9 %>% select(Week, avg_score, avg_time)
+s9 <- unique(s9)
+s10 <- s7[!duplicated(s7[,'id']),]
+s10 <- s10 %>% select(year, Class_P_F) %>% group_by(year) %>% count(Class_P_F)
+```
+
+## Visualizations
+The first visualization, which is a line graph, represents change of average student score on units over the first six weeks of the course. It aids in the creation of the course final exam and tailoring of the teaching methods or approach.   
+```{r, echo=FALSE}
+# Change of Scores Over the Weeks
+g3 <- ggplot(s9, aes(Week, avg_score)) +geom_line(color= "blue") + labs(title = "Change of Scores Over Time", y = "Average Score") +theme_classic()
+pdf("Change_of_Scores_Over_Time.pdf")
+plot(g3)
+dev.off()
+```
+
+The second visualization, which is also a line graph, represents an average number of minutes it took students complete the units over the course of six weeks. It permits instructors to see the level of difficulty of the units and the courseload. 
+```{r, echo=FALSE}
+g4 <- ggplot(s9, aes(Week, avg_time)) +geom_line(color= "red") + labs(title = "Change of Time to Complete the Units Over the Course", y = "Average Time (in Minutes)") +theme_classic()
+pdf("Change_of_Time_to_Complete_the_Units_Over_the_Course.pdf")
+plot(g4)
+dev.off()
+```
+
+The third visualization, which is a bar graph, shows the average student score for each unit. The unit with the lowest average score suggests that either it was perhaps a bit difficult, which may prompt the instructor to revise it, or that the students have difficulty understanding the topics associated with that unit. 
+```{r, echo=FALSE}
+# Average Scores For Units
+g5 <- ggplot(s8, aes(Unit, avg_score, fill = avg_time)) + geom_col(stat="identity") + labs(title = "Average Score of Units", y = "Average Score", fill = "Average Time Took to Complete") + theme_classic()
+pdf("Average_Score_of_Units.pdf")
+plot(g5)
+dev.off()
+```
+
+The fourth visualization, which is also a bar graph, permits the comparison of the number of students passing the course from year to year. It also helps to see the changes in the number of students registering for the course from year to year. Likewise, it may help in the creation or revision of the course syllabus. 
+```{r, echo=FALSE}
+g6 <- ggplot(s10,aes(year,n, fill = Class_P_F)) + geom_col(position="dodge") + labs(title = "Frequency of Passing Students in 2014 vs. 2015", y = "Frequency", fill = "Pass/Fail") +theme_classic()
+pdf("Frequency_of_Passing_Students.pdf")
+plot(g6)
+dev.off()
+```
+
+#### Closing the Loop
+An autogenerated email will be sent to the students to notfiy them if they have failed the unit. The goal is for the students to schedule an appointment with the instructor so that they can discuss any difficulties or challenges they faced when completing the unit. It also gives them an opportunity to clarify any misconceptions regarding the topic of the unit. 
+```{r}
+if(s7$P_F == "Fail") {
+  #Email  
+  sendmail_options(smtpServer="ASPMX.L.GOOGLE.COM")
+  address <- as.character("mail.list@gmail.com")
+  address <- paste("<", address, ">", sep = "")
+
+
+  from <- "<INSTRUCTOR'S EMAIL ADDRESS>"
+  to <- address
+  subject <- "Unit Notification"
+  body <- c(
+    "Your grade for the unit is below 65%. Please, schedule an appointment with the instructor to discuss this issue."
+  )
+
+  sendmail(from, to, subject, body)
+}
+```
+
+#### Score and Time Interactive Visualization (By Student)
+The interactive visualization/dashboard ([link](https://lizarova777.shinyapps.io/Student_Scores/)) consists of three historgrams. It allows the instructor to select the ID ofthe  student in order to see the break down of scores for each unit, the number of minutes it took for the student to complete each unit, and the change of scores over the duration of the course. The score and time for the final exam, which took place in the seventh week of class, was not included for the reason mentioned above. Nevertheless, this visualization allows instructors to see with which unit the student is struggling the most, especially if it is the unit the student spent the most amount of time on. Also, it enables instructors to see how much time and effort each student is dedicating to their course. 
+
+### Interactive Visualization
+```{r, echo=FALSE}
+ui <- fluidPage(
+  titlePanel("Student Performance on Units"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput(inputId = "id", label = "Student ID:", choices= s7$id, hr())
+      ),
+  mainPanel(
+    plotOutput("timehist"),
+    plotOutput("scorehist"),
+    plotOutput("weekhist")
+  )
+  )
+)
+  
+server <- function(input, output) {
+  output$timehist <- renderPlot({
+    data <- reactive(s7[s7$id %in% input$id, ])
+    ggplot(data(), aes(Unit,Minute)) + geom_col(fill="Red") + labs(title = "Time Spent on Units", y ="Time (in Minutes)")
+  })
+  output$scorehist <- renderPlot({
+    data <- reactive(s7[s7$id %in% input$id, ])
+    ggplot(data(), aes(Unit,Score)) + geom_col(fill="blue") + labs(title = "Student's Scores on the Units")
+  })
+  output$weekhist <- renderPlot({
+    data <- reactive(s7[s7$id %in% input$id, ])
+    ggplot(data(), aes(Week,Score)) + geom_col(fill="green") + labs(title = "Change of Student's Scores Over the Course")
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+

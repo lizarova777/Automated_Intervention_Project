@@ -1,0 +1,12 @@
+name: Student_Scores
+title: Student_Scores
+username:
+account: lizarova777
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 913933
+bundleId: 2071479
+url: https://lizarova777.shinyapps.io/Student_Scores/
+when: 1557380460.69445
+asMultiple: FALSE
+asStatic: FALSE
