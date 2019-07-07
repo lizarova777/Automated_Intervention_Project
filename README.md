@@ -21,11 +21,13 @@ Permission was received from the students in this course to collect their tweets
 ## Product:
 This product consists of a social network analysis based on students' tweets, several visualizations to represent overall class performance and are stored in a ZIP file, an auto-generated email intervention to students with below-passing grade, and several interactive visualizations for each student, which are presented in form of a dashboard, the link of which can be found below. 
 
+### 2014 vs. 2015 Class Social Networks
+
+![socialnetworks](https://github.com/lizarova777/Automated_Intervention_Project/blob/master/2014_vs._2015_Class_Social_Networks.png)
+
 ### Visualizations:
 
-![Avg score of units](https://github.com/lizarova777/Automated_Intervention_Project/blob/master/Average_Score_of_Units.png)
-
-![Frequency of Passing Students](https://github.com/lizarova777/Automated_Intervention_Project/blob/master/Frequency_of_Passing_Students.png)
+![visualuizations](https://github.com/lizarova777/Automated_Intervention_Project/blob/master/Visualizations.png)
 
 ### Dashboard Link:
 
