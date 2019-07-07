@@ -19,7 +19,7 @@ Permission was received from the students in this course to collect their tweets
 ** These are real Tweets from the wild, collected by the [Sentiment140](http://help.sentiment140.com/home) team at Stanford. I have attempted to clean them of anything offensive but may have missed something so be aware if you plan on reading the text.
 
 ## Product:
-This product consists of a social network analysis based on students' tweets, several visualizations to represent overall class performance and are stored in a ZIP file, an auto-generated email intervention to students with below-passing grade, and several interactive visualizations for each student, which are presented in form of a dashboard, the link of which can be found below. 
+This product consists of a social network analysis based on students' tweets, several visualizations to represent overall class performance and are stored in a ZIP file, an auto-generated email intervention to students with below-passing grade, and several interactive visualizations for each student, which are presented in form of a dashboard, the link of which can be found below. A more detailed explanation can be found in the R Markdown File. 
 
 ### 2014 vs. 2015 Class Social Networks
 
