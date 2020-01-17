@@ -213,15 +213,21 @@ The interactive visualization/dashboard ([link](https://lizarova777.shinyapps.io
 ### Interactive Visualization
 ```{r, echo=FALSE}
 ui <- fluidPage(
+  
   titlePanel("Student Performance on Units"),
   sidebarLayout(
     sidebarPanel(
       selectInput(inputId = "id", label = "Student ID:", choices= s7$id, hr())
       ),
   mainPanel(
-    plotOutput("timehist"),
-    plotOutput("scorehist"),
-    plotOutput("weekhist")
+    fluidRow(
+      column(6,
+    plotOutput("timehist", height= "400px", width="400px")),
+    column(6,
+    plotOutput("scorehist", height= "400px",width="400px")),
+    column(6,
+    plotOutput("weekhist", height= "400px",width = "400px"))
+  )
   )
   )
 )

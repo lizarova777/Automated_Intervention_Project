@@ -35,19 +35,24 @@ s10 <- s10 %>% select(year, Class_P_F) %>% group_by(year) %>% count(Class_P_F)
 ## Interactive Visualization
 
 ui <- fluidPage(
+  
   titlePanel("Student Performance on Units"),
   sidebarLayout(
     sidebarPanel(
       selectInput(inputId = "id", label = "Student ID:", choices= s7$id, hr())
     ),
     mainPanel(
-      plotOutput("timehist"),
-      plotOutput("scorehist"), 
-      plotOutput("weekhist")
+      fluidRow(
+        column(6,
+               plotOutput("timehist", height= "400px", width="400px")),
+        column(6,
+               plotOutput("scorehist", height= "400px",width="400px")),
+        column(6,
+               plotOutput("weekhist", height= "400px",width = "400px"))
+      )
     )
   )
 )
-
 
 server <- function(input, output) {
   output$timehist <- renderPlot({
@@ -65,4 +70,3 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
-
