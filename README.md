@@ -31,4 +31,4 @@ This product consists of a social network analysis based on students' tweets, se
 
 ### Dashboard Link:
 
-[dashboard link](https://lizarova777.shinyapps.io/Student_Scores/)
+[Student Performance Dashboard](https://lizarova777.shinyapps.io/Student_Scores/)
